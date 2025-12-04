@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Brain, Sparkles, RefreshCw, Trophy, ChevronRight, Keyboard, Volume2, Lightbulb } from 'lucide-react';
+import { Brain, Sparkles, RefreshCw, Trophy, ChevronRight, Keyboard, Volume2, VolumeX, Lightbulb } from 'lucide-react';
 import { generateSentences } from './services/geminiService';
 import { Sentence, Difficulty, GameState } from './types';
 import WordDisplay from './components/WordDisplay';
@@ -8,6 +8,7 @@ import DifficultySelector from './components/DifficultySelector';
 const App: React.FC = () => {
   // --- State ---
   const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.EASY);
+  const [soundEnabled, setSoundEnabled] = useState(false); // Default sound OFF
   const [gameData, setGameData] = useState<GameState>({
     currentSentenceIndex: 0,
     sentences: [],
@@ -151,9 +152,12 @@ const App: React.FC = () => {
 
   const handleSuccess = () => {
     setShowSuccessAnim(true);
-    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3'); // Simple ping sound
-    audio.volume = 0.2;
-    audio.play().catch(() => {}); // Ignore play errors (browsers block auto audio sometimes)
+    
+    if (soundEnabled) {
+      const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3'); // Simple ping sound
+      audio.volume = 0.2;
+      audio.play().catch(() => {}); // Ignore play errors (browsers block auto audio sometimes)
+    }
 
     setGameData(prev => ({
       ...prev,
@@ -191,6 +195,10 @@ const App: React.FC = () => {
     const utterance = new SpeechSynthesisUtterance(currentSentence.english);
     utterance.lang = 'en-US';
     window.speechSynthesis.speak(utterance);
+  };
+
+  const toggleSound = () => {
+    setSoundEnabled(prev => !prev);
   };
 
   // --- Render ---
@@ -256,23 +264,43 @@ const App: React.FC = () => {
               </div>
               <h1 className="text-lg md:text-xl font-bold text-slate-800 tracking-tight">TypeMaster AI</h1>
             </div>
-            {/* Stats visible on mobile top row */}
-            <div className="flex md:hidden items-center gap-4 text-sm font-medium">
-               <div className="flex flex-col items-end">
-                 <span className="text-indigo-600 text-lg leading-none font-bold">{gameData.score}</span>
-               </div>
-               <div className="flex flex-col items-end">
-                 <span className="text-slate-700 text-lg leading-none">{gameData.currentSentenceIndex + 1}<span className="text-slate-400 text-sm">/{gameData.sentences.length}</span></span>
+            
+            <div className="flex items-center gap-3">
+               {/* Sound Toggle (Visible on Mobile here) */}
+               <button
+                  onClick={toggleSound}
+                  className="p-2 rounded-full text-slate-400 hover:bg-slate-100 hover:text-indigo-600 transition-colors md:hidden"
+                  aria-label={soundEnabled ? "Mute sound" : "Enable sound"}
+               >
+                 {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+               </button>
+
+               {/* Stats visible on mobile top row */}
+               <div className="flex md:hidden items-center gap-4 text-sm font-medium">
+                  <div className="flex flex-col items-end">
+                    <span className="text-indigo-600 text-lg leading-none font-bold">{gameData.score}</span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-slate-700 text-lg leading-none">{gameData.currentSentenceIndex + 1}<span className="text-slate-400 text-sm">/{gameData.sentences.length}</span></span>
+                  </div>
                </div>
             </div>
           </div>
           
-          <div className="w-full md:w-auto flex justify-center">
+          <div className="w-full md:w-auto flex justify-center items-center gap-4">
             <DifficultySelector 
               currentDifficulty={difficulty} 
               onSelect={setDifficulty} 
               disabled={false}
             />
+            {/* Sound Toggle (Desktop) */}
+            <button
+               onClick={toggleSound}
+               className="hidden md:flex p-2 rounded-full text-slate-400 hover:bg-slate-100 hover:text-indigo-600 transition-colors"
+               title={soundEnabled ? "Mute sound" : "Enable sound"}
+            >
+              {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+            </button>
           </div>
 
           {/* Stats visible on desktop only */}
