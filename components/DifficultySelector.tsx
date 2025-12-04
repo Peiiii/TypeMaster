@@ -15,14 +15,14 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({ currentDifficul
   ];
 
   return (
-    <div className="flex gap-2 justify-center">
+    <div className="flex gap-1.5 md:gap-2 justify-center flex-wrap">
       {levels.map((level) => (
         <button
           key={level.id}
           onClick={() => onSelect(level.id)}
           disabled={disabled}
           className={`
-            px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200
+            px-3 py-1.5 md:px-4 md:py-1.5 rounded-full text-xs md:text-sm font-medium border transition-all duration-200 relative z-20
             ${currentDifficulty === level.id 
               ? `ring-2 ring-offset-2 ring-indigo-500 ${level.color} scale-105` 
               : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}

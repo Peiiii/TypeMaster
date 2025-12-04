@@ -21,7 +21,7 @@ const WordDisplay: React.FC<WordDisplayProps> = ({ targetSentence, userInput, is
   const activeWordIndex = isTypingNextWord ? userWords.length - 1 : userWords.length - 1;
 
   return (
-    <div className="flex flex-wrap gap-x-4 gap-y-10 justify-center max-w-4xl mx-auto p-4 perspective-1000">
+    <div className="flex flex-wrap gap-x-3 gap-y-6 md:gap-x-4 md:gap-y-10 justify-center max-w-4xl mx-auto p-2 md:p-4 perspective-1000">
       {targetWords.map((targetWord, index) => {
         const userWord = userWords[index] || "";
         
@@ -42,9 +42,9 @@ const WordDisplay: React.FC<WordDisplayProps> = ({ targetSentence, userInput, is
               className={`
                 relative flex items-center justify-center
                 transition-all duration-200
-                border-b-4 
-                px-1 py-1
-                min-w-[2.5rem]
+                border-b-2 md:border-b-4 
+                px-0.5 md:px-1 py-1
+                min-w-[1.5rem] md:min-w-[2.5rem]
                 ${isComplete 
                   ? 'border-green-500 text-green-600' 
                   : isActive 
@@ -63,7 +63,7 @@ const WordDisplay: React.FC<WordDisplayProps> = ({ targetSentence, userInput, is
                 It forces the parent <div> to always be the width of the correct answer.
                 This prevents the underscore from resizing while typing.
               */}
-              <span className="opacity-0 select-none pointer-events-none text-2xl md:text-3xl font-bold tracking-wide whitespace-pre font-mono">
+              <span className="opacity-0 select-none pointer-events-none text-xl sm:text-2xl md:text-3xl font-bold tracking-wide whitespace-pre font-mono">
                 {targetWord}
               </span>
 
@@ -74,20 +74,20 @@ const WordDisplay: React.FC<WordDisplayProps> = ({ targetSentence, userInput, is
                 Centered absolutely within the fixed-width parent.
               */}
               <span className={`absolute inset-0 flex items-center justify-center pointer-events-none`}>
-                <span className={`text-2xl md:text-3xl font-bold tracking-wide whitespace-pre font-mono ${isComplete ? 'animate-bounce-short' : ''}`}>
+                <span className={`text-xl sm:text-2xl md:text-3xl font-bold tracking-wide whitespace-pre font-mono ${isComplete ? 'animate-bounce-short' : ''}`}>
                   {userWord}
                 </span>
               </span>
 
               {/* Status Icons */}
               {isMatched && !isComplete && (
-                <div className="absolute -top-3 -right-3 text-emerald-500 animate-in fade-in zoom-in duration-200 z-10">
-                  <Check size={16} strokeWidth={4} />
+                <div className="absolute -top-2 -right-2 md:-top-3 md:-right-3 text-emerald-500 animate-in fade-in zoom-in duration-200 z-10">
+                  <Check size={14} className="md:w-4 md:h-4" strokeWidth={4} />
                 </div>
               )}
               {isError && (
-                 <div className="absolute -top-3 -right-3 text-red-400 animate-shake z-10">
-                 <X size={16} strokeWidth={4} />
+                 <div className="absolute -top-2 -right-2 md:-top-3 md:-right-3 text-red-400 animate-shake z-10">
+                 <X size={14} className="md:w-4 md:h-4" strokeWidth={4} />
                </div>
               )}
             </div>
@@ -95,7 +95,7 @@ const WordDisplay: React.FC<WordDisplayProps> = ({ targetSentence, userInput, is
             {/* Hint: Letter Count */}
             {!isComplete && (
                <div className={`
-                 absolute -bottom-6 left-0 right-0 text-center text-[10px] font-mono transition-colors duration-200
+                 absolute -bottom-5 md:-bottom-6 left-0 right-0 text-center text-[9px] md:text-[10px] font-mono transition-colors duration-200
                  ${isActive ? 'text-indigo-400 font-bold' : 'text-slate-300'}
                  ${isMatched ? 'opacity-0' : 'opacity-100'}
                `}>
