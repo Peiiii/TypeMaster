@@ -5,6 +5,15 @@ import { Sentence, Difficulty, GameState } from './types';
 import WordDisplay from './components/WordDisplay';
 import DifficultySelector from './components/DifficultySelector';
 
+// Helper to strip punctuation from a sentence string for comparison/hinting
+// Preserves internal punctuation like apostrophes (e.g. "don't")
+const getCleanSentenceTokens = (text: string) => {
+  return text.trim().split(/\s+/).map(word => {
+    // Regex matches trailing punctuation
+    return word.replace(/[.,!?;:"')\]}]+$/, '');
+  });
+};
+
 const App: React.FC = () => {
   // --- State ---
   const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.EASY);
@@ -69,6 +78,10 @@ const App: React.FC = () => {
     if (showSuccessAnim || gameData.isLoading) return;
 
     const val = e.target.value;
+    
+    // Prevent leading space to maintain word alignment
+    if (val.startsWith(' ')) return;
+    
     // Prevent double spaces for cleaner splitting
     if (val.includes('  ')) return;
     
@@ -79,23 +92,24 @@ const App: React.FC = () => {
   const handleHint = () => {
     if (!currentSentence || showSuccessAnim || gameData.isComplete) return;
 
-    const target = currentSentence.english;
+    // Use clean tokens to generate the target string without punctuation
+    const targetClean = getCleanSentenceTokens(currentSentence.english).join(' ');
     const current = userInput;
 
     // Progressive Hint Logic:
     // 1. Find the length of the matching prefix (case-insensitive)
-    // 2. Reveal exactly one more character from the Target (fixing errors if any)
+    // 2. Reveal exactly one more character from the Clean Target
     let matchLen = 0;
     while (
       matchLen < current.length && 
-      matchLen < target.length && 
-      current[matchLen].toLowerCase() === target[matchLen].toLowerCase()
+      matchLen < targetClean.length && 
+      current[matchLen].toLowerCase() === targetClean[matchLen].toLowerCase()
     ) {
       matchLen++;
     }
 
     // Slice up to matchLen + 1 to add the next character
-    const nextContent = target.slice(0, matchLen + 1);
+    const nextContent = targetClean.slice(0, matchLen + 1);
     
     if (nextContent !== current) {
        setUserInput(nextContent);
@@ -124,29 +138,17 @@ const App: React.FC = () => {
   const checkCompletion = (input: string) => {
     if (!currentSentence) return;
 
-    // Robust comparison: normalize case and trim whitespace
-    const normalizedInput = input.trim().toLowerCase();
-    const normalizedTarget = currentSentence.english.trim().toLowerCase();
+    // Robust comparison: normalize case and strip punctuation from both
+    // User does not need to type punctuation.
+    const normalizedTarget = getCleanSentenceTokens(currentSentence.english).join(' ').toLowerCase();
+    
+    // We also strip punctuation from user input to be forgiving if they typed it
+    const normalizedInput = getCleanSentenceTokens(input).join(' ').toLowerCase();
 
-    // 1. Exact Match Check
+    // 1. Exact Match Check (Ignoring punctuation)
     if (normalizedInput === normalizedTarget) {
       handleSuccess();
       return;
-    }
-
-    // 2. Forgiving Match Check (Ignore missing final punctuation)
-    // If target is "I am happy." and input is "I am happy", we accept it.
-    const lastChar = normalizedTarget.slice(-1);
-    const isPunctuation = ['.', '!', '?'].includes(lastChar);
-    
-    if (isPunctuation) {
-      const targetWithoutPunct = normalizedTarget.slice(0, -1);
-      // If the input matches the target minus the punctuation
-      if (normalizedInput === targetWithoutPunct) {
-        // Auto-complete the punctuation for the user so it looks correct
-        setUserInput(currentSentence.english); 
-        handleSuccess();
-      }
     }
   };
 
