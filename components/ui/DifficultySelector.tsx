@@ -1,5 +1,5 @@
 import React from 'react';
-import { Difficulty } from '../types';
+import { Difficulty } from '../../types';
 
 interface DifficultySelectorProps {
   currentDifficulty: Difficulty;

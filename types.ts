@@ -10,11 +10,14 @@ export enum Difficulty {
 }
 
 export interface GameState {
-  currentSentenceIndex: number;
+  currentDifficulty: Difficulty;
   sentences: Sentence[];
+  currentSentenceIndex: number;
+  userInput: string;
   score: number;
   streak: number;
   isLoading: boolean;
   isComplete: boolean;
+  showSuccessAnim: boolean;
   error: string | null;
 }
