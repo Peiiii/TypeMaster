@@ -17,8 +17,9 @@ const WordDisplay: React.FC<WordDisplayProps> = ({ targetSentence, userInput, is
   }, [userInput]);
 
   // Determine which word is currently active
-  const isTypingNextWord = userInput.endsWith(' ') && userInput.length > 0;
-  const activeWordIndex = isTypingNextWord ? userWords.length - 1 : userWords.length - 1;
+  // If user splits "word " -> ["word", ""], length is 2, index 1 is active.
+  // If user splits "word" -> ["word"], length is 1, index 0 is active.
+  const activeWordIndex = userWords.length - 1;
 
   return (
     <div className="flex flex-wrap gap-x-4 gap-y-10 justify-center max-w-4xl mx-auto p-4 perspective-1000">
@@ -74,8 +75,17 @@ const WordDisplay: React.FC<WordDisplayProps> = ({ targetSentence, userInput, is
                 Centered absolutely within the fixed-width parent.
               */}
               <span className={`absolute inset-0 flex items-center justify-center pointer-events-none`}>
-                <span className={`text-2xl md:text-3xl font-bold tracking-wide whitespace-pre font-mono ${isComplete ? 'animate-bounce-short' : ''}`}>
-                  {userWord}
+                {/* 
+                   Add zero-width space (\u200B) fallback when empty. 
+                   This ensures the span has height so the cursor renders correctly.
+                */}
+                <span className={`relative text-2xl md:text-3xl font-bold tracking-wide whitespace-pre font-mono ${isComplete ? 'animate-bounce-short' : ''}`}>
+                  {userWord || '\u200B'}
+                  
+                  {/* Blinking Cursor */}
+                  {isActive && !isComplete && (
+                    <span className="absolute -right-[3px] h-[70%] w-[3px] bg-indigo-500 rounded-full caret-blink top-[15%]" />
+                  )}
                 </span>
               </span>
 

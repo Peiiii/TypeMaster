@@ -103,7 +103,7 @@ export class GameManager {
       
       this.autoNextTimer = setTimeout(() => {
         this.nextSentence();
-      }, 500); // Reduced delay to 500ms for faster pace
+      }, 300); // Super fast 300ms transition
     }
   };
 
