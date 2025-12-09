@@ -17,16 +17,23 @@ const WordDisplay: React.FC<WordDisplayProps> = ({ targetSentence, userInput, is
   }, [userInput]);
 
   // Determine which word is currently active
-  // If user splits "word " -> ["word", ""], length is 2, index 1 is active.
-  // If user splits "word" -> ["word"], length is 1, index 0 is active.
   const activeWordIndex = userWords.length - 1;
 
   return (
-    <div className="flex flex-wrap gap-x-4 gap-y-10 justify-center max-w-4xl mx-auto p-4 perspective-1000">
-      {targetWords.map((targetWord, index) => {
+    <div className="flex flex-wrap gap-x-3 gap-y-10 justify-center max-w-4xl mx-auto p-4 perspective-1000">
+      {targetWords.map((fullTargetWord, index) => {
+        // Separate word from trailing punctuation
+        // e.g. "happy." -> word: "happy", punct: "."
+        // e.g. "don't" -> word: "don't", punct: ""
+        // Use a regex to capture word part and punctuation part
+        const match = fullTargetWord.match(/^(.+?)([.,!?;:]*)$/);
+        const targetWord = match ? match[1] : fullTargetWord;
+        const punctuation = match ? match[2] : "";
+
         const userWord = userWords[index] || "";
         
         // Match logic (Case insensitive for visual feedback)
+        // We compare the user input against the STRIPPED target word
         const normalizedTarget = targetWord.toLowerCase();
         const normalizedUser = userWord.toLowerCase();
         
@@ -37,7 +44,7 @@ const WordDisplay: React.FC<WordDisplayProps> = ({ targetSentence, userInput, is
         const isActive = index === activeWordIndex;
         
         return (
-          <div key={index} className="relative group">
+          <div key={index} className="relative group flex items-baseline">
             {/* The Slot Container */}
             <div 
               className={`
@@ -45,7 +52,7 @@ const WordDisplay: React.FC<WordDisplayProps> = ({ targetSentence, userInput, is
                 transition-all duration-200
                 border-b-4 
                 px-1 py-1
-                min-w-[2.5rem]
+                min-w-[1rem]
                 ${isComplete 
                   ? 'border-green-500 text-green-600' 
                   : isActive 
@@ -60,9 +67,7 @@ const WordDisplay: React.FC<WordDisplayProps> = ({ targetSentence, userInput, is
             >
               {/* 
                 GHOST ELEMENT:
-                This invisible span contains the TARGET word.
-                It forces the parent <div> to always be the width of the correct answer.
-                This prevents the underscore from resizing while typing.
+                Contains the TARGET word (no punctuation).
               */}
               <span className="opacity-0 select-none pointer-events-none text-2xl md:text-3xl font-bold tracking-wide whitespace-pre font-mono">
                 {targetWord}
@@ -70,15 +75,9 @@ const WordDisplay: React.FC<WordDisplayProps> = ({ targetSentence, userInput, is
 
               {/* 
                 VISIBLE INPUT:
-                This span overlays the ghost element.
-                It contains what the user has actually typed.
-                Centered absolutely within the fixed-width parent.
+                Overlay with user typed text
               */}
               <span className={`absolute inset-0 flex items-center justify-center pointer-events-none`}>
-                {/* 
-                   Add zero-width space (\u200B) fallback when empty. 
-                   This ensures the span has height so the cursor renders correctly.
-                */}
                 <span className={`relative text-2xl md:text-3xl font-bold tracking-wide whitespace-pre font-mono ${isComplete ? 'animate-bounce-short' : ''}`}>
                   {userWord || '\u200B'}
                   
@@ -102,7 +101,14 @@ const WordDisplay: React.FC<WordDisplayProps> = ({ targetSentence, userInput, is
               )}
             </div>
             
-            {/* Hint: Letter Count */}
+            {/* Punctuation Display (Always Visible) */}
+            {punctuation && (
+                <span className={`text-2xl md:text-3xl font-bold font-mono ml-0.5 select-none transition-colors duration-300 ${isComplete ? 'text-green-600' : 'text-slate-400'}`}>
+                    {punctuation}
+                </span>
+            )}
+
+            {/* Hint: Letter Count (Excludes punctuation) */}
             {!isComplete && (
                <div className={`
                  absolute -bottom-6 left-0 right-0 text-center text-[10px] font-mono transition-colors duration-200
