@@ -53,8 +53,41 @@ export class GameManager {
     // Prevent double spaces
     if (value.includes('  ')) return;
     
-    useGameStore.setState({ userInput: value });
-    this.checkCompletion(value);
+    // Auto-advance logic: Add space if word is complete and correct
+    let nextValue = value;
+    const previousInput = state.userInput;
+    const isTypingForward = value.length > previousInput.length;
+
+    if (isTypingForward) {
+      const currentSentence = state.sentences[state.currentSentenceIndex];
+      if (currentSentence) {
+        const targetWords = currentSentence.english.trim().split(/\s+/);
+        const userWords = value.split(' '); // Use simple space split for user input
+
+        // Only check if we are currently inside a word (not if we just typed a space)
+        if (!value.endsWith(' ')) {
+          const currentWordIndex = userWords.length - 1;
+          
+          if (currentWordIndex < targetWords.length) {
+            const currentUserWord = userWords[currentWordIndex];
+            const currentTargetWord = targetWords[currentWordIndex];
+            
+            // Check exact match (case insensitive)
+            if (currentUserWord.toLowerCase() === currentTargetWord.toLowerCase()) {
+              const isLastWord = currentWordIndex === targetWords.length - 1;
+              
+              // If matched and not the last word, auto-append space
+              if (!isLastWord) {
+                nextValue = value + ' ';
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    useGameStore.setState({ userInput: nextValue });
+    this.checkCompletion(nextValue);
   };
 
   checkCompletion = (input: string) => {

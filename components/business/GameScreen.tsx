@@ -150,25 +150,30 @@ const GameScreen: React.FC = () => {
         </div>
 
         {/* Hints & Instructions */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex items-center gap-4 mb-8 relative z-20">
             <div className={`text-slate-400 text-sm flex items-center gap-2 transition-opacity duration-300 ${showSuccessAnim ? 'opacity-0' : 'opacity-70'}`}>
                 <Keyboard size={16} />
                 <span className="hidden sm:inline">Type translation...</span>
             </div>
             
             {!showSuccessAnim && !isComplete && (
-                <button
-                    onClick={() => {
-                        presenter.gameManager.handleHint();
-                        inputRef.current?.focus();
-                    }}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition-colors text-sm font-medium border border-yellow-200 shadow-sm active:translate-y-0.5"
-                    title="Get a hint (Costs 2 points)"
-                >
-                    <Lightbulb size={16} className={score >= 2 ? "fill-yellow-100" : ""} />
-                    <span>Hint</span>
-                    <span className="bg-white/60 px-1.5 py-0.5 rounded text-[10px] font-bold tracking-tight text-yellow-700/70 border border-yellow-200/50">-2</span>
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => {
+                            presenter.gameManager.handleHint();
+                            inputRef.current?.focus();
+                        }}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition-colors text-sm font-medium border border-yellow-200 shadow-sm active:translate-y-0.5"
+                        title="Click or press Tab"
+                    >
+                        <Lightbulb size={16} className={score >= 2 ? "fill-yellow-100" : ""} />
+                        <span>Hint</span>
+                        <span className="bg-white/60 px-1.5 py-0.5 rounded text-[10px] font-bold tracking-tight text-yellow-700/70 border border-yellow-200/50">-2</span>
+                    </button>
+                    <span className="hidden sm:inline text-xs text-slate-400 ml-1">
+                        or press <kbd className="font-sans font-bold text-slate-500">Tab</kbd>
+                    </span>
+                </div>
             )}
         </div>
 
