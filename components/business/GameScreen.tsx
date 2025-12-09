@@ -12,7 +12,7 @@ const GameScreen: React.FC = () => {
   // Select data from store
   const { 
     currentDifficulty, sentences, currentSentenceIndex, score, streak, 
-    isLoading, isComplete, userInput, showSuccessAnim, error 
+    isLoading, isComplete, userInput, showSuccessAnim, isAutoAdvance, error 
   } = useGameStore();
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -101,7 +101,9 @@ const GameScreen: React.FC = () => {
         currentDifficulty={currentDifficulty}
         currentIndex={currentSentenceIndex}
         totalSentences={sentences.length}
+        isAutoAdvance={isAutoAdvance}
         onDifficultyChange={(d) => presenter.gameManager.changeDifficulty(d)}
+        onToggleAutoAdvance={useGameStore.getState().toggleAutoAdvance}
       />
 
       <main className="flex-1 flex flex-col items-center justify-center p-6 relative max-w-5xl mx-auto w-full">
@@ -135,6 +137,13 @@ const GameScreen: React.FC = () => {
                    <span className="font-bold">Next Sentence</span>
                    <div className="flex items-center justify-center bg-white/20 rounded h-6 w-6 text-xs font-mono">↵</div>
                    <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform"/>
+                   
+                   {/* Auto-advance progress indicator */}
+                   {isAutoAdvance && (
+                     <span className="absolute -bottom-6 text-[10px] text-indigo-400 font-medium animate-pulse">
+                       Auto-advancing...
+                     </span>
+                   )}
                 </button>
              </div>
           )}

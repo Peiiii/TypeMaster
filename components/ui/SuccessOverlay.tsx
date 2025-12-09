@@ -11,7 +11,7 @@ interface SuccessOverlayProps {
 const SuccessOverlay: React.FC<SuccessOverlayProps> = ({ isVisible, correctEnglish, onNext, onSpeak }) => {
   return (
     <div className={`
-      fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-6 transform transition-transform duration-300 ease-out z-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]
+      fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-6 transform transition-transform duration-150 ease-out z-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]
       ${isVisible ? 'translate-y-0' : 'translate-y-full'}
     `}>
       <div className="max-w-3xl mx-auto flex items-center justify-between">

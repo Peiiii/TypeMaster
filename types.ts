@@ -19,5 +19,6 @@ export interface GameState {
   isLoading: boolean;
   isComplete: boolean;
   showSuccessAnim: boolean;
+  isAutoAdvance: boolean;
   error: string | null;
 }

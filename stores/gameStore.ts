@@ -12,6 +12,7 @@ interface GameStore extends GameState {
   setCompletionStatus: (isComplete: boolean) => void;
   setShowSuccessAnim: (show: boolean) => void;
   setError: (error: string | null) => void;
+  toggleAutoAdvance: () => void;
   nextSentenceIndex: () => void;
   resetGame: (difficulty: Difficulty) => void;
 }
@@ -27,6 +28,7 @@ export const useGameStore = create<GameStore>((set) => ({
   isLoading: true,
   isComplete: false,
   showSuccessAnim: false,
+  isAutoAdvance: true,
   error: null,
 
   // Actions
@@ -39,6 +41,7 @@ export const useGameStore = create<GameStore>((set) => ({
   setCompletionStatus: (isComplete) => set({ isComplete }),
   setShowSuccessAnim: (showSuccessAnim) => set({ showSuccessAnim }),
   setError: (error) => set({ error }),
+  toggleAutoAdvance: () => set((state) => ({ isAutoAdvance: !state.isAutoAdvance })),
   nextSentenceIndex: () => set((state) => ({ 
     currentSentenceIndex: state.currentSentenceIndex + 1,
     userInput: '',

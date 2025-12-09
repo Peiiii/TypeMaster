@@ -5,6 +5,7 @@ import { AudioManager } from './AudioManager';
 
 export class GameManager {
   private audioManager: AudioManager;
+  private autoNextTimer: ReturnType<typeof setTimeout> | null = null;
 
   // We pass dependencies if needed, or instantiate them. 
   // Ideally managers in this pattern are singletons or instantiated by Presenter.
@@ -95,6 +96,15 @@ export class GameManager {
     });
 
     this.audioManager.playSuccessSound();
+
+    // Auto Advance Logic
+    if (state.isAutoAdvance) {
+      if (this.autoNextTimer) clearTimeout(this.autoNextTimer);
+      
+      this.autoNextTimer = setTimeout(() => {
+        this.nextSentence();
+      }, 500); // Reduced delay to 500ms for faster pace
+    }
   };
 
   handleHint = () => {
@@ -128,6 +138,12 @@ export class GameManager {
   };
 
   nextSentence = () => {
+    // Clear any pending auto-advance timer to prevent double-skipping
+    if (this.autoNextTimer) {
+      clearTimeout(this.autoNextTimer);
+      this.autoNextTimer = null;
+    }
+
     const state = useGameStore.getState();
     const nextIndex = state.currentSentenceIndex + 1;
     
@@ -147,6 +163,11 @@ export class GameManager {
   };
 
   restartGame = () => {
+    if (this.autoNextTimer) {
+      clearTimeout(this.autoNextTimer);
+      this.autoNextTimer = null;
+    }
+
     const state = useGameStore.getState();
     useGameStore.setState({
       score: 0,
