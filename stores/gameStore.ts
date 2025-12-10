@@ -1,9 +1,10 @@
 import { create } from 'zustand';
-import { Difficulty, GameState } from '../types';
+import { Difficulty, GameState, Topic } from '../types';
 
 interface GameStore extends GameState {
   // Actions
   setDifficulty: (difficulty: Difficulty) => void;
+  setTopic: (topic: Topic) => void;
   setSentences: (sentences: GameState['sentences']) => void;
   setUserInput: (input: string) => void;
   setScore: (score: number) => void;
@@ -13,6 +14,7 @@ interface GameStore extends GameState {
   setShowSuccessAnim: (show: boolean) => void;
   setError: (error: string | null) => void;
   toggleAutoAdvance: () => void;
+  toggleSound: () => void;
   nextSentenceIndex: () => void;
   resetGame: (difficulty: Difficulty) => void;
 }
@@ -20,6 +22,7 @@ interface GameStore extends GameState {
 export const useGameStore = create<GameStore>((set) => ({
   // Initial State
   currentDifficulty: Difficulty.EASY,
+  currentTopic: 'all',
   sentences: [],
   currentSentenceIndex: 0,
   userInput: '',
@@ -29,10 +32,12 @@ export const useGameStore = create<GameStore>((set) => ({
   isComplete: false,
   showSuccessAnim: false,
   isAutoAdvance: true,
+  isSoundEnabled: false, // Default is OFF
   error: null,
 
   // Actions
   setDifficulty: (difficulty) => set({ currentDifficulty: difficulty }),
+  setTopic: (topic) => set({ currentTopic: topic }),
   setSentences: (sentences) => set({ sentences }),
   setUserInput: (userInput) => set({ userInput }),
   setScore: (score) => set({ score }),
@@ -42,13 +47,15 @@ export const useGameStore = create<GameStore>((set) => ({
   setShowSuccessAnim: (showSuccessAnim) => set({ showSuccessAnim }),
   setError: (error) => set({ error }),
   toggleAutoAdvance: () => set((state) => ({ isAutoAdvance: !state.isAutoAdvance })),
+  toggleSound: () => set((state) => ({ isSoundEnabled: !state.isSoundEnabled })),
   nextSentenceIndex: () => set((state) => ({ 
     currentSentenceIndex: state.currentSentenceIndex + 1,
     userInput: '',
     showSuccessAnim: false
   })),
-  resetGame: (difficulty) => set({
+  resetGame: (difficulty) => set((state) => ({
     currentDifficulty: difficulty,
+    // Keep current topic
     currentSentenceIndex: 0,
     score: 0,
     streak: 0,
@@ -56,5 +63,5 @@ export const useGameStore = create<GameStore>((set) => ({
     showSuccessAnim: false,
     userInput: '',
     error: null
-  })
+  }))
 }));

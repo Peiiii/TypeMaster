@@ -11,15 +11,15 @@ const GameScreen: React.FC = () => {
   
   // Select data from store
   const { 
-    currentDifficulty, sentences, currentSentenceIndex, score, streak, 
-    isLoading, isComplete, userInput, showSuccessAnim, isAutoAdvance, error 
+    currentDifficulty, currentTopic, sentences, currentSentenceIndex, score, streak, 
+    isLoading, isComplete, userInput, showSuccessAnim, isAutoAdvance, isSoundEnabled, error 
   } = useGameStore();
 
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Initial Load
   useEffect(() => {
-    presenter.gameManager.loadSentences(currentDifficulty);
+    presenter.gameManager.loadSentences(currentDifficulty, currentTopic);
   }, []);
 
   // Focus management
@@ -99,11 +99,15 @@ const GameScreen: React.FC = () => {
       <GameHeader 
         score={score}
         currentDifficulty={currentDifficulty}
+        currentTopic={currentTopic}
         currentIndex={currentSentenceIndex}
         totalSentences={sentences.length}
         isAutoAdvance={isAutoAdvance}
+        isSoundEnabled={isSoundEnabled}
         onDifficultyChange={(d) => presenter.gameManager.changeDifficulty(d)}
+        onTopicChange={(t) => presenter.gameManager.changeTopic(t)}
         onToggleAutoAdvance={useGameStore.getState().toggleAutoAdvance}
+        onToggleSound={useGameStore.getState().toggleSound}
       />
 
       <main className="flex-1 flex flex-col items-center justify-center p-6 relative max-w-5xl mx-auto w-full">

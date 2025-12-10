@@ -1,6 +1,6 @@
 import { useGameStore } from '../stores/gameStore';
 import { generateSentences } from '../services/geminiService';
-import { Difficulty } from '../types';
+import { Difficulty, Topic } from '../types';
 import { AudioManager } from './AudioManager';
 
 export class GameManager {
@@ -16,14 +16,17 @@ export class GameManager {
     return text.replace(/[.,!?;:]/g, '');
   };
 
-  loadSentences = async (difficulty: Difficulty) => {
+  loadSentences = async (difficulty: Difficulty, topic?: Topic) => {
     const state = useGameStore.getState();
+    const targetTopic = topic || state.currentTopic;
+    
+    // Only set loading if empty to prevent flash on difficulty switch
     if (state.sentences.length === 0) {
       useGameStore.setState({ isLoading: true });
     }
 
     try {
-      const sentences = await generateSentences(difficulty);
+      const sentences = await generateSentences(difficulty, targetTopic);
       useGameStore.setState({
         sentences,
         currentSentenceIndex: 0,
@@ -44,6 +47,12 @@ export class GameManager {
   changeDifficulty = (difficulty: Difficulty) => {
     useGameStore.setState({ currentDifficulty: difficulty });
     this.loadSentences(difficulty);
+  };
+
+  changeTopic = (topic: Topic) => {
+    useGameStore.setState({ currentTopic: topic });
+    const state = useGameStore.getState();
+    this.loadSentences(state.currentDifficulty, topic);
   };
 
   handleInput = (value: string) => {
@@ -120,15 +129,18 @@ export class GameManager {
       streak: state.streak + 1
     });
 
-    this.audioManager.playSuccessSound();
+    if (state.isSoundEnabled) {
+      this.audioManager.playSuccessSound();
+    }
 
     // Auto Advance Logic
     if (state.isAutoAdvance) {
       if (this.autoNextTimer) clearTimeout(this.autoNextTimer);
       
+      // REDUCED DELAY: 500ms -> 200ms for snappier transition
       this.autoNextTimer = setTimeout(() => {
         this.nextSentence();
-      }, 500); 
+      }, 200); 
     }
   };
 
