@@ -4,12 +4,8 @@ import { Difficulty, GameMode, Topic } from '../types';
 import { AudioManager } from './AudioManager';
 
 export class GameManager {
-  private audioManager: AudioManager;
+  private audioManager = new AudioManager();
   private autoNextTimer: ReturnType<typeof setTimeout> | null = null;
-
-  constructor(audioManager: AudioManager) {
-    this.audioManager = audioManager;
-  }
 
   // Helper to remove punctuation for logic comparison
   private stripPunctuation = (text: string) => {
