@@ -15,5 +15,15 @@ export const travel: Sentence[] = [
   { english: "Stop here.", chinese: "停在这里。", topic: 'travel' },
   { english: "Let's go now.", chinese: "我们现在走吧。", topic: 'travel' },
   { english: "The train is fast.", chinese: "火车很快。", topic: 'travel' },
-  { english: "I want to eat.", chinese: "我想吃东西。", topic: 'travel' }
+  { english: "I want to eat.", chinese: "我想吃东西。", topic: 'travel' },
+  { english: "Go straight on.", chinese: "直走。", topic: 'travel' },
+  { english: "Cross the road.", chinese: "过马路。", topic: 'travel' },
+  { english: "It is near.", chinese: "这很近。", topic: 'travel' },
+  { english: "Take a bus.", chinese: "坐公交车。", topic: 'travel' },
+  { english: "A map please.", chinese: "请给我地图。", topic: 'travel' },
+  { english: "Is it safe?", chinese: "安全吗？", topic: 'travel' },
+  { english: "Pack your bags.", chinese: "打包你的行李。", topic: 'travel' },
+  { english: "Visit the zoo.", chinese: "参观动物园。", topic: 'travel' },
+  { english: "See the sea.", chinese: "看海。", topic: 'travel' },
+  { english: "Buy a ticket.", chinese: "买票。", topic: 'travel' }
 ];

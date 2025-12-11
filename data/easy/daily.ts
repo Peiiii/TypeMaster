@@ -20,5 +20,15 @@ export const daily: Sentence[] = [
   { english: "She sings well.", chinese: "她唱得很好。", topic: 'daily' },
   { english: "I have a dog.", chinese: "我有一只狗。", topic: 'daily' },
   { english: "Look at that.", chinese: "看那个。", topic: 'daily' },
-  { english: "My name is Tom.", chinese: "我的名字是汤姆。", topic: 'daily' }
+  { english: "My name is Tom.", chinese: "我的名字是汤姆。", topic: 'daily' },
+  { english: "I drink water.", chinese: "我喝水。", topic: 'daily' },
+  { english: "He sleeps late.", chinese: "他睡得很晚。", topic: 'daily' },
+  { english: "It is cold.", chinese: "天气很冷。", topic: 'daily' },
+  { english: "We are family.", chinese: "我们是一家人。", topic: 'daily' },
+  { english: "She loves cats.", chinese: "她喜欢猫。", topic: 'daily' },
+  { english: "They run home.", chinese: "他们跑回家。", topic: 'daily' },
+  { english: "I cook dinner.", chinese: "我做晚饭。", topic: 'daily' },
+  { english: "Wash your hands.", chinese: "洗手。", topic: 'daily' },
+  { english: "Clean the room.", chinese: "打扫房间。", topic: 'daily' },
+  { english: "It is sunny.", chinese: "天气晴朗。", topic: 'daily' }
 ];

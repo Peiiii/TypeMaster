@@ -13,5 +13,15 @@ export const tech: Sentence[] = [
   { english: "Go online.", chinese: "上网。", topic: 'tech' },
   { english: "Check the app.", chinese: "检查应用程序。", topic: 'tech' },
   { english: "Battery is low.", chinese: "电量低。", topic: 'tech' },
-  { english: "Wifi is down.", chinese: "无线网断了。", topic: 'tech' }
+  { english: "Wifi is down.", chinese: "无线网断了。", topic: 'tech' },
+  { english: "Press the key.", chinese: "按键。", topic: 'tech' },
+  { english: "It is fast.", chinese: "它很快。", topic: 'tech' },
+  { english: "Send a text.", chinese: "发短信。", topic: 'tech' },
+  { english: "Watch a video.", chinese: "看视频。", topic: 'tech' },
+  { english: "Play a game.", chinese: "玩游戏。", topic: 'tech' },
+  { english: "Charge it now.", chinese: "现在充电。", topic: 'tech' },
+  { english: "No signal here.", chinese: "这里没有信号。", topic: 'tech' },
+  { english: "Call number.", chinese: "拨打电话。", topic: 'tech' },
+  { english: "Is it online?", chinese: "在线吗？", topic: 'tech' },
+  { english: "Fix the bug.", chinese: "修复漏洞。", topic: 'tech' }
 ];

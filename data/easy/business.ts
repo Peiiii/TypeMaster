@@ -14,5 +14,15 @@ export const business: Sentence[] = [
   { english: "Is it free?", chinese: "它是免费的吗？", topic: 'business' },
   { english: "Pay the bill.", chinese: "买单。", topic: 'business' },
   { english: "It is a deal.", chinese: "成交。", topic: 'business' },
-  { english: "Read the report.", chinese: "阅读报告。", topic: 'business' }
+  { english: "Read the report.", chinese: "阅读报告。", topic: 'business' },
+  { english: "I am working.", chinese: "我在工作。", topic: 'business' },
+  { english: "It is cheap.", chinese: "这很便宜。", topic: 'business' },
+  { english: "Sell it now.", chinese: "现在卖掉它。", topic: 'business' },
+  { english: "Buy it now.", chinese: "现在买。", topic: 'business' },
+  { english: "A new job.", chinese: "一份新工作。", topic: 'business' },
+  { english: "Start the work.", chinese: "开始工作。", topic: 'business' },
+  { english: "Finish it soon.", chinese: "快点完成。", topic: 'business' },
+  { english: "It is urgent.", chinese: "这很紧急。", topic: 'business' },
+  { english: "Talk to him.", chinese: "和他谈谈。", topic: 'business' },
+  { english: "Write a note.", chinese: "写个便条。", topic: 'business' }
 ];
