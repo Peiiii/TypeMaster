@@ -1,8 +1,9 @@
 import { create } from 'zustand';
-import { Difficulty, GameState, Topic } from '../types';
+import { Difficulty, GameState, Topic, GameMode } from '../types';
 
 interface GameStore extends GameState {
   // Actions
+  setGameMode: (mode: GameMode) => void;
   setDifficulty: (difficulty: Difficulty) => void;
   setTopic: (topic: Topic) => void;
   setSentences: (sentences: GameState['sentences']) => void;
@@ -21,6 +22,7 @@ interface GameStore extends GameState {
 
 export const useGameStore = create<GameStore>((set) => ({
   // Initial State
+  gameMode: 'practice',
   currentDifficulty: Difficulty.EASY,
   currentTopic: 'all',
   sentences: [],
@@ -36,6 +38,7 @@ export const useGameStore = create<GameStore>((set) => ({
   error: null,
 
   // Actions
+  setGameMode: (mode) => set({ gameMode: mode }),
   setDifficulty: (difficulty) => set({ currentDifficulty: difficulty }),
   setTopic: (topic) => set({ currentTopic: topic }),
   setSentences: (sentences) => set({ sentences }),
@@ -55,7 +58,7 @@ export const useGameStore = create<GameStore>((set) => ({
   })),
   resetGame: (difficulty) => set((state) => ({
     currentDifficulty: difficulty,
-    // Keep current topic
+    // Keep current topic and mode
     currentSentenceIndex: 0,
     score: 0,
     streak: 0,

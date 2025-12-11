@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { RefreshCw, Trophy, ChevronRight, Keyboard, Lightbulb } from 'lucide-react';
+import { RefreshCw, Trophy, ChevronRight, Keyboard, Lightbulb, BookOpen } from 'lucide-react';
 import { useGameStore } from '../../stores/gameStore';
 import { usePresenter } from '../../hooks/usePresenter';
 import GameHeader from '../ui/GameHeader';
@@ -11,7 +11,7 @@ const GameScreen: React.FC = () => {
   
   // Select data from store
   const { 
-    currentDifficulty, currentTopic, sentences, currentSentenceIndex, score, streak, 
+    currentDifficulty, currentTopic, gameMode, sentences, currentSentenceIndex, score, streak, 
     isLoading, isComplete, userInput, showSuccessAnim, isAutoAdvance, isSoundEnabled, error 
   } = useGameStore();
 
@@ -55,7 +55,9 @@ const GameScreen: React.FC = () => {
         <div className="animate-spin mb-4">
           <RefreshCw size={32} className="text-indigo-500" />
         </div>
-        <p className="font-medium text-slate-600 animate-pulse">Loading English lesson...</p>
+        <p className="font-medium text-slate-600 animate-pulse">
+          {gameMode === 'story' ? 'Writing a story for you...' : 'Loading English lesson...'}
+        </p>
       </div>
     );
   }
@@ -69,7 +71,9 @@ const GameScreen: React.FC = () => {
             <Trophy size={40} />
           </div>
           <h2 className="text-3xl font-bold text-slate-800 mb-2">Excellent Work!</h2>
-          <p className="text-slate-600 mb-6">You completed the {currentDifficulty} session.</p>
+          <p className="text-slate-600 mb-6">
+            You completed the {gameMode === 'story' ? 'story' : `${currentTopic} session`} on {currentDifficulty}.
+          </p>
           
           <div className="grid grid-cols-2 gap-4 mb-8">
             <div className="bg-slate-50 p-4 rounded-xl">
@@ -87,7 +91,7 @@ const GameScreen: React.FC = () => {
             className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl transition-colors flex items-center justify-center gap-2"
           >
             <RefreshCw size={20} />
-            Start New Session
+            {gameMode === 'story' ? 'Generate New Story' : 'Start New Session'}
           </button>
         </div>
       </div>
@@ -100,17 +104,27 @@ const GameScreen: React.FC = () => {
         score={score}
         currentDifficulty={currentDifficulty}
         currentTopic={currentTopic}
+        gameMode={gameMode}
         currentIndex={currentSentenceIndex}
         totalSentences={sentences.length}
         isAutoAdvance={isAutoAdvance}
         isSoundEnabled={isSoundEnabled}
         onDifficultyChange={(d) => presenter.gameManager.changeDifficulty(d)}
         onTopicChange={(t) => presenter.gameManager.changeTopic(t)}
+        onModeChange={(m) => presenter.gameManager.changeGameMode(m)}
         onToggleAutoAdvance={useGameStore.getState().toggleAutoAdvance}
         onToggleSound={useGameStore.getState().toggleSound}
       />
 
       <main className="flex-1 flex flex-col items-center justify-center p-6 relative max-w-5xl mx-auto w-full">
+        {/* Story Indicator */}
+        {gameMode === 'story' && (
+           <div className="absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-2 text-indigo-400 opacity-60">
+             <BookOpen size={16} />
+             <span className="text-sm font-semibold tracking-wider uppercase">Story Mode</span>
+           </div>
+        )}
+
         {/* Chinese Prompt */}
         <div className="w-full text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
            <span className="inline-block px-3 py-1 bg-slate-200 text-slate-600 rounded-full text-xs font-bold tracking-wider mb-4 uppercase">

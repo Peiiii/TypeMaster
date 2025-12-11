@@ -1,19 +1,21 @@
 import React from 'react';
-import { Brain, Play, Pause, Volume2, VolumeX } from 'lucide-react';
+import { Brain, Play, Pause, Volume2, VolumeX, BookOpen, LayoutGrid } from 'lucide-react';
 import DifficultySelector from './DifficultySelector';
 import TopicSelector from './TopicSelector';
-import { Difficulty, Topic } from '../../types';
+import { Difficulty, Topic, GameMode } from '../../types';
 
 interface GameHeaderProps {
   score: number;
   currentDifficulty: Difficulty;
   currentTopic?: Topic;
+  gameMode: GameMode;
   currentIndex: number;
   totalSentences: number;
   isAutoAdvance: boolean;
   isSoundEnabled: boolean;
   onDifficultyChange: (diff: Difficulty) => void;
   onTopicChange?: (topic: Topic) => void;
+  onModeChange: (mode: GameMode) => void;
   onToggleAutoAdvance: () => void;
   onToggleSound: () => void;
 }
@@ -22,12 +24,14 @@ const GameHeader: React.FC<GameHeaderProps> = ({
   score, 
   currentDifficulty, 
   currentTopic = 'all',
+  gameMode,
   currentIndex, 
   totalSentences, 
   isAutoAdvance,
   isSoundEnabled,
   onDifficultyChange,
   onTopicChange,
+  onModeChange,
   onToggleAutoAdvance,
   onToggleSound
 }) => {
@@ -39,17 +43,28 @@ const GameHeader: React.FC<GameHeaderProps> = ({
           {/* Top Row / Logo & Score (Mobile) */}
           <div className="flex items-center justify-between w-full md:w-auto gap-4">
              <div className="flex items-center gap-3">
-              <div className="bg-indigo-600 p-2 rounded-lg text-white shadow-indigo-200 shadow-lg">
-                <Brain size={24} />
+              <div className={`bg-indigo-600 p-2 rounded-lg text-white shadow-indigo-200 shadow-lg transition-transform ${gameMode === 'story' ? 'rotate-[-5deg]' : ''}`}>
+                {gameMode === 'story' ? <BookOpen size={24} /> : <Brain size={24} />}
               </div>
               <h1 className="text-xl font-bold text-slate-800 tracking-tight hidden sm:block">TypeMaster AI</h1>
             </div>
             
-            {/* Mobile Score Compact */}
-            <div className="flex md:hidden items-center gap-3 text-sm font-medium">
-                <div className="bg-indigo-50 px-3 py-1 rounded-full text-indigo-700">
-                  {score} pts
-                </div>
+            {/* Mode Switcher */}
+            <div className="flex bg-slate-100 p-1 rounded-lg">
+               <button
+                 onClick={() => onModeChange('practice')}
+                 className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-sm font-medium transition-all ${gameMode === 'practice' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+               >
+                 <LayoutGrid size={14} />
+                 <span>Topic</span>
+               </button>
+               <button
+                 onClick={() => onModeChange('story')}
+                 className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-sm font-medium transition-all ${gameMode === 'story' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+               >
+                 <BookOpen size={14} />
+                 <span>Story</span>
+               </button>
             </div>
           </div>
           
@@ -61,14 +76,16 @@ const GameHeader: React.FC<GameHeaderProps> = ({
               disabled={false}
             />
             
-            <div className="h-4 w-px bg-slate-200 hidden sm:block"></div>
-            
-            {onTopicChange && (
-              <TopicSelector 
-                currentTopic={currentTopic}
-                onSelect={onTopicChange}
-                disabled={false}
-              />
+            {/* Only show topic selector in Practice Mode */}
+            {gameMode === 'practice' && onTopicChange && (
+              <>
+                <div className="h-4 w-px bg-slate-200 hidden sm:block"></div>
+                <TopicSelector 
+                  currentTopic={currentTopic}
+                  onSelect={onTopicChange}
+                  disabled={false}
+                />
+              </>
             )}
           </div>
 
@@ -119,8 +136,9 @@ const GameHeader: React.FC<GameHeaderProps> = ({
             </div>
             
             {/* Mobile Progress Compact */}
-             <div className="md:hidden text-slate-500 text-sm font-medium">
-               {currentIndex + 1} / {totalSentences}
+             <div className="md:hidden flex items-center gap-2 text-slate-500 text-sm font-medium">
+               <span className="bg-indigo-50 text-indigo-700 px-2 rounded-full text-xs">{score} pts</span>
+               <span>{currentIndex + 1} / {totalSentences}</span>
              </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 import { useGameStore } from '../stores/gameStore';
-import { generateSentences } from '../services/geminiService';
-import { Difficulty, Topic } from '../types';
+import { generateSentences, generateStory } from '../services/geminiService';
+import { Difficulty, GameMode, Topic } from '../types';
 import { AudioManager } from './AudioManager';
 
 export class GameManager {
@@ -19,14 +19,19 @@ export class GameManager {
   loadSentences = async (difficulty: Difficulty, topic?: Topic) => {
     const state = useGameStore.getState();
     const targetTopic = topic || state.currentTopic;
+    const isStoryMode = state.gameMode === 'story';
     
-    // Only set loading if empty to prevent flash on difficulty switch
-    if (state.sentences.length === 0) {
-      useGameStore.setState({ isLoading: true });
-    }
+    // We do not set isLoading=true here to avoid flashing the loading screen
+    // because the service is now local and instant.
 
     try {
-      const sentences = await generateSentences(difficulty, targetTopic);
+      let sentences;
+      if (isStoryMode) {
+        sentences = await generateStory(difficulty);
+      } else {
+        sentences = await generateSentences(difficulty, targetTopic);
+      }
+
       useGameStore.setState({
         sentences,
         currentSentenceIndex: 0,
@@ -39,7 +44,7 @@ export class GameManager {
     } catch (err) {
       useGameStore.setState({ 
         isLoading: false, 
-        error: "Failed to load sentences. Please refresh." 
+        error: "Failed to load content. Please refresh." 
       });
     }
   };
@@ -52,7 +57,22 @@ export class GameManager {
   changeTopic = (topic: Topic) => {
     useGameStore.setState({ currentTopic: topic });
     const state = useGameStore.getState();
+    // Topic change only applies if in practice mode, but UI should handle visibility
     this.loadSentences(state.currentDifficulty, topic);
+  };
+
+  changeGameMode = (mode: GameMode) => {
+    const state = useGameStore.getState();
+    if (state.gameMode === mode) return;
+
+    // We don't clear sentences here so the UI maintains the previous content 
+    // until the new instant content replaces it. This prevents the loading spinner.
+    useGameStore.setState({ 
+      gameMode: mode,
+      score: 0,
+      streak: 0 
+    });
+    this.loadSentences(state.currentDifficulty);
   };
 
   handleInput = (value: string) => {
@@ -159,6 +179,7 @@ export class GameManager {
     while (
       matchLen < current.length && 
       matchLen < target.length && 
+      matchLen < current.length && // Added bound check
       current[matchLen].toLowerCase() === target[matchLen].toLowerCase()
     ) {
       matchLen++;

@@ -1,9 +1,10 @@
 export type Topic = 'all' | 'daily' | 'travel' | 'business' | 'tech' | 'social';
+export type GameMode = 'practice' | 'story';
 
 export interface Sentence {
   english: string;
   chinese: string;
-  topic: Exclude<Topic, 'all'>;
+  topic: Exclude<Topic, 'all'> | 'story';
 }
 
 export enum Difficulty {
@@ -13,6 +14,7 @@ export enum Difficulty {
 }
 
 export interface GameState {
+  gameMode: GameMode;
   currentDifficulty: Difficulty;
   currentTopic: Topic;
   sentences: Sentence[];
