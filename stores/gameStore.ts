@@ -22,7 +22,7 @@ interface GameStore extends GameState {
 
 export const useGameStore = create<GameStore>((set) => ({
   // Initial State
-  gameMode: 'practice',
+  gameMode: 'story',
   currentDifficulty: Difficulty.EASY,
   currentTopic: 'all',
   sentences: [],
