@@ -6,6 +6,7 @@ import { AudioManager } from './AudioManager';
 export class GameManager {
   private audioManager = new AudioManager();
   private autoNextTimer: ReturnType<typeof setTimeout> | null = null;
+  private sentenceStartTime: number | null = null;
 
   // Helper to remove punctuation for logic comparison
   private stripPunctuation = (text: string) => {
@@ -17,9 +18,6 @@ export class GameManager {
     const targetTopic = topic || state.currentTopic;
     const isStoryMode = state.gameMode === 'story';
     
-    // We do not set isLoading=true here to avoid flashing the loading screen
-    // because the service is now local and instant.
-
     try {
       let sentences;
       if (isStoryMode) {
@@ -35,8 +33,10 @@ export class GameManager {
         isComplete: false,
         error: null,
         userInput: '',
-        showSuccessAnim: false
+        showSuccessAnim: false,
+        wpm: 0
       });
+      this.sentenceStartTime = null;
     } catch (err) {
       useGameStore.setState({ 
         isLoading: false, 
@@ -53,7 +53,6 @@ export class GameManager {
   changeTopic = (topic: Topic) => {
     useGameStore.setState({ currentTopic: topic });
     const state = useGameStore.getState();
-    // Topic change only applies if in practice mode, but UI should handle visibility
     this.loadSentences(state.currentDifficulty, topic);
   };
 
@@ -61,12 +60,11 @@ export class GameManager {
     const state = useGameStore.getState();
     if (state.gameMode === mode) return;
 
-    // We don't clear sentences here so the UI maintains the previous content 
-    // until the new instant content replaces it. This prevents the loading spinner.
     useGameStore.setState({ 
       gameMode: mode,
       score: 0,
-      streak: 0 
+      streak: 0,
+      wpm: 0
     });
     this.loadSentences(state.currentDifficulty);
   };
@@ -78,22 +76,29 @@ export class GameManager {
     // Prevent double spaces
     if (value.includes('  ')) return;
     
-    // Strip punctuation from input (User doesn't need to type it)
+    // Start Timer on first character
+    if (!this.sentenceStartTime && value.length > 0) {
+      this.sentenceStartTime = Date.now();
+    }
+
+    // Play Type Sound if enabled and content changed (and length increased)
+    if (state.isSoundEnabled && value.length > state.userInput.length) {
+      this.audioManager.playTypeSound();
+    }
+
+    // Strip punctuation from input
     const cleanValue = this.stripPunctuation(value);
 
     // Auto-advance logic: Add space if word is complete and correct
     let nextValue = cleanValue;
-    const previousInput = state.userInput;
-    const isTypingForward = cleanValue.length > previousInput.length;
+    const isTypingForward = cleanValue.length > this.stripPunctuation(state.userInput).length;
 
     if (isTypingForward) {
       const currentSentence = state.sentences[state.currentSentenceIndex];
       if (currentSentence) {
-        // Strip punctuation from target words for comparison
         const targetWords = currentSentence.english.trim().split(/\s+/).map(w => this.stripPunctuation(w));
         const userWords = cleanValue.split(' '); 
 
-        // Only check if we are currently inside a word (not if we just typed a space)
         if (!cleanValue.endsWith(' ')) {
           const currentWordIndex = userWords.length - 1;
           
@@ -104,11 +109,15 @@ export class GameManager {
             // Check exact match (case insensitive)
             if (currentUserWord.toLowerCase() === currentTargetWord.toLowerCase()) {
               const isLastWord = currentWordIndex === targetWords.length - 1;
-              
-              // If matched and not the last word, auto-append space
               if (!isLastWord) {
                 nextValue = cleanValue + ' ';
               }
+            } else {
+               // Check for error to play sound
+               // If user typed 'a' and target is 'b', play error
+               if (!currentTargetWord.toLowerCase().startsWith(currentUserWord.toLowerCase())) {
+                   if (state.isSoundEnabled) this.audioManager.playErrorSound();
+               }
             }
           }
         }
@@ -119,17 +128,36 @@ export class GameManager {
     this.checkCompletion(nextValue);
   };
 
+  calculateWPM = (charCount: number) => {
+    if (!this.sentenceStartTime) return 0;
+    const timeSpentMs = Date.now() - this.sentenceStartTime;
+    const timeSpentMin = timeSpentMs / 1000 / 60;
+    if (timeSpentMin === 0) return 0;
+    
+    // Standard WPM = (All characters / 5) / Minutes
+    const wpm = Math.round((charCount / 5) / timeSpentMin);
+    // Cap at reasonable max to avoid glitches
+    return Math.min(wpm, 200);
+  };
+
   checkCompletion = (input: string) => {
     const state = useGameStore.getState();
     const currentSentence = state.sentences[state.currentSentenceIndex];
     if (!currentSentence) return;
 
     const normalizedInput = input.trim().toLowerCase();
-    // Compare against stripped target sentence
     const normalizedTarget = this.stripPunctuation(currentSentence.english).trim().toLowerCase();
 
-    // Exact Match (ignoring punctuation)
     if (normalizedInput === normalizedTarget) {
+      // Calculate WPM for this sentence
+      const currentWpm = this.calculateWPM(currentSentence.english.length);
+      
+      // Update Average WPM
+      // If it's the first sentence, just use current. Otherwise average it roughly.
+      // A true average would need total chars / total time, but a rolling average is fine for a game.
+      const newAverageWpm = state.wpm === 0 ? currentWpm : Math.round((state.wpm + currentWpm) / 2);
+      
+      useGameStore.setState({ wpm: newAverageWpm });
       this.handleSuccess();
       return;
     }
@@ -147,16 +175,16 @@ export class GameManager {
 
     if (state.isSoundEnabled) {
       this.audioManager.playSuccessSound();
+      // Speak immediately
+      this.audioManager.speak(state.sentences[state.currentSentenceIndex].english);
     }
 
-    // Auto Advance Logic
     if (state.isAutoAdvance) {
       if (this.autoNextTimer) clearTimeout(this.autoNextTimer);
-      
-      // REDUCED DELAY: 500ms -> 200ms for snappier transition
+      // Fast transition: 200ms to allow visual confirmation (green text), then next.
       this.autoNextTimer = setTimeout(() => {
         this.nextSentence();
-      }, 200); 
+      }, 200);
     }
   };
 
@@ -166,16 +194,13 @@ export class GameManager {
 
     if (!currentSentence || state.showSuccessAnim || state.isComplete) return;
 
-    // Hint uses stripped target
     const target = this.stripPunctuation(currentSentence.english);
     const current = state.userInput;
 
-    // Progressive Hint Logic
     let matchLen = 0;
     while (
       matchLen < current.length && 
       matchLen < target.length && 
-      matchLen < current.length && // Added bound check
       current[matchLen].toLowerCase() === target[matchLen].toLowerCase()
     ) {
       matchLen++;
@@ -186,7 +211,7 @@ export class GameManager {
     if (nextContent !== current) {
        useGameStore.setState({ 
          userInput: nextContent,
-         score: Math.max(0, state.score - 2) // Penalty
+         score: Math.max(0, state.score - 2)
        });
        this.checkCompletion(nextContent);
     }
@@ -201,6 +226,8 @@ export class GameManager {
     const state = useGameStore.getState();
     const nextIndex = state.currentSentenceIndex + 1;
     
+    this.sentenceStartTime = null; // Reset timer for next sentence
+
     if (nextIndex >= state.sentences.length) {
       useGameStore.setState({ 
         isComplete: true,
@@ -221,13 +248,14 @@ export class GameManager {
       clearTimeout(this.autoNextTimer);
       this.autoNextTimer = null;
     }
-
     const state = useGameStore.getState();
     useGameStore.setState({
       score: 0,
       streak: 0,
+      wpm: 0,
       isComplete: false
     });
+    this.sentenceStartTime = null;
     this.loadSentences(state.currentDifficulty);
   };
 }

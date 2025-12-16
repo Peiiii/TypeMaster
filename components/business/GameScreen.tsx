@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { RefreshCw, Trophy, ChevronRight, Keyboard, Lightbulb, BookOpen } from 'lucide-react';
+import { RefreshCw, Trophy, ChevronRight, Keyboard, Lightbulb, BookOpen, Clock } from 'lucide-react';
 import { useGameStore } from '../../stores/gameStore';
 import { usePresenter } from '../../hooks/usePresenter';
 import GameHeader from '../ui/GameHeader';
@@ -11,8 +11,8 @@ const GameScreen: React.FC = () => {
   
   // Select data from store
   const { 
-    currentDifficulty, currentTopic, gameMode, sentences, currentSentenceIndex, score, streak, 
-    isLoading, isComplete, userInput, showSuccessAnim, isAutoAdvance, isSoundEnabled, error 
+    currentDifficulty, currentTopic, gameMode, sentences, currentSentenceIndex, score, streak, wpm,
+    isLoading, isComplete, userInput, showSuccessAnim, isAutoAdvance, isSoundEnabled, showHint, error 
   } = useGameStore();
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -26,7 +26,6 @@ const GameScreen: React.FC = () => {
   useEffect(() => {
     const handleClick = () => inputRef.current?.focus();
     document.addEventListener('click', handleClick);
-    // Initial focus
     setTimeout(() => inputRef.current?.focus(), 50);
     return () => document.removeEventListener('click', handleClick);
   }, []);
@@ -66,29 +65,33 @@ const GameScreen: React.FC = () => {
   if (isComplete) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center border border-slate-100">
-          <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6 text-yellow-600">
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center border border-slate-100 animate-in zoom-in duration-300">
+          <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6 text-yellow-600 shadow-yellow-100 shadow-lg">
             <Trophy size={40} />
           </div>
           <h2 className="text-3xl font-bold text-slate-800 mb-2">Excellent Work!</h2>
-          <p className="text-slate-600 mb-6">
+          <p className="text-slate-600 mb-8">
             You completed the {gameMode === 'story' ? 'story' : `${currentTopic} session`} on {currentDifficulty}.
           </p>
           
-          <div className="grid grid-cols-2 gap-4 mb-8">
-            <div className="bg-slate-50 p-4 rounded-xl">
-              <div className="text-2xl font-bold text-indigo-600">{score}</div>
-              <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Total Score</div>
+          <div className="grid grid-cols-3 gap-3 mb-8">
+            <div className="bg-indigo-50 p-3 rounded-xl border border-indigo-100">
+              <div className="text-xl font-bold text-indigo-600">{score}</div>
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider font-bold mt-1">Score</div>
             </div>
-            <div className="bg-slate-50 p-4 rounded-xl">
-              <div className="text-2xl font-bold text-orange-500">{streak}</div>
-              <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Best Streak</div>
+            <div className="bg-orange-50 p-3 rounded-xl border border-orange-100">
+              <div className="text-xl font-bold text-orange-600">{streak}</div>
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider font-bold mt-1">Streak</div>
+            </div>
+            <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+              <div className="text-xl font-bold text-emerald-600">{wpm}</div>
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider font-bold mt-1">WPM</div>
             </div>
           </div>
 
           <button 
             onClick={() => presenter.gameManager.restartGame()}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-6 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-indigo-200"
           >
             <RefreshCw size={20} />
             {gameMode === 'story' ? 'Generate New Story' : 'Start New Session'}
@@ -99,9 +102,10 @@ const GameScreen: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
       <GameHeader 
         score={score}
+        wpm={wpm}
         currentDifficulty={currentDifficulty}
         currentTopic={currentTopic}
         gameMode={gameMode}
@@ -109,95 +113,98 @@ const GameScreen: React.FC = () => {
         totalSentences={sentences.length}
         isAutoAdvance={isAutoAdvance}
         isSoundEnabled={isSoundEnabled}
+        showHint={showHint}
         onDifficultyChange={(d) => presenter.gameManager.changeDifficulty(d)}
         onTopicChange={(t) => presenter.gameManager.changeTopic(t)}
         onModeChange={(m) => presenter.gameManager.changeGameMode(m)}
         onToggleAutoAdvance={useGameStore.getState().toggleAutoAdvance}
         onToggleSound={useGameStore.getState().toggleSound}
+        onToggleHint={useGameStore.getState().toggleHint}
       />
 
-      <main className="flex-1 flex flex-col items-center justify-center p-6 relative max-w-5xl mx-auto w-full">
+      <main className="flex-1 flex flex-col items-center justify-center p-4 relative max-w-6xl mx-auto w-full overflow-hidden">
         {/* Story Indicator */}
         {gameMode === 'story' && (
-           <div className="absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-2 text-indigo-400 opacity-60">
-             <BookOpen size={16} />
-             <span className="text-sm font-semibold tracking-wider uppercase">Story Mode</span>
+           <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-2 text-indigo-400 opacity-80 bg-white px-3 py-1 rounded-full shadow-sm border border-slate-100">
+             <BookOpen size={14} />
+             <span className="text-xs font-bold tracking-wider uppercase">Story Mode</span>
            </div>
         )}
 
-        {/* Chinese Prompt */}
-        <div className="w-full text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-           <span className="inline-block px-3 py-1 bg-slate-200 text-slate-600 rounded-full text-xs font-bold tracking-wider mb-4 uppercase">
-             Translate to English
-           </span>
-           <h2 className="text-3xl md:text-5xl font-extrabold text-slate-800 leading-tight">
-             {currentSentence?.chinese}
-           </h2>
-        </div>
+        {/* Transition Container: Animates when currentSentenceIndex changes */}
+        <div 
+           key={currentSentenceIndex}
+           className="flex flex-col items-center justify-center w-full max-w-4xl py-10 animate-in slide-in-from-right-8 fade-in duration-300"
+        >
+            {/* Chinese Prompt */}
+            <div className="w-full text-center mb-16">
+               <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-[10px] font-bold tracking-widest mb-6 uppercase border border-slate-200">
+                 Translate to English
+               </span>
+               <h2 className="text-2xl md:text-4xl lg:text-5xl font-extrabold text-slate-800 leading-tight tracking-tight">
+                 {currentSentence?.chinese}
+               </h2>
+            </div>
 
-        {/* Interactive Word Display */}
-        <div className="w-full mb-12 relative">
-          {currentSentence && (
-            <WordDisplay 
-              targetSentence={currentSentence.english}
-              userInput={userInput}
-              isComplete={showSuccessAnim}
-            />
-          )}
-          
-          {/* Success Inline Button (Desktop) */}
-          {showSuccessAnim && (
-             <div className="absolute -bottom-20 left-0 right-0 flex justify-center animate-in fade-in slide-in-from-top-2 duration-300 z-30">
-                <button 
-                  onClick={() => presenter.gameManager.nextSentence()}
-                  className="group flex items-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white pl-6 pr-4 py-3 rounded-full shadow-xl shadow-indigo-200 transition-all hover:scale-105 active:scale-95 border-2 border-indigo-100"
-                >
-                   <span className="font-bold">Next Sentence</span>
-                   <div className="flex items-center justify-center bg-white/20 rounded h-6 w-6 text-xs font-mono">↵</div>
-                   <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform"/>
-                   
-                   {/* Auto-advance progress indicator */}
-                   {isAutoAdvance && (
-                     <span className="absolute -bottom-6 text-[10px] text-indigo-400 font-medium animate-pulse">
-                       Auto-advancing...
-                     </span>
-                   )}
-                </button>
-             </div>
-          )}
+            {/* Interactive Word Display */}
+            <div className="w-full mb-12 relative min-h-[120px]">
+              {currentSentence && (
+                <WordDisplay 
+                  targetSentence={currentSentence.english}
+                  userInput={userInput}
+                  isComplete={showSuccessAnim}
+                />
+              )}
+              
+              {/* Success Inline Button (Desktop) - Only show if NOT auto-advancing to avoid flashing */}
+              {showSuccessAnim && !isAutoAdvance && (
+                 <div className="absolute -bottom-24 left-0 right-0 flex justify-center animate-in fade-in slide-in-from-top-2 duration-300 z-30">
+                    <button 
+                      onClick={() => presenter.gameManager.nextSentence()}
+                      className="group flex items-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white pl-6 pr-4 py-3 rounded-full shadow-xl shadow-indigo-200 transition-all hover:scale-105 active:scale-95 border-2 border-indigo-100"
+                    >
+                       <span className="font-bold">Next Sentence</span>
+                       <div className="flex items-center justify-center bg-white/20 rounded h-6 w-6 text-xs font-mono">↵</div>
+                       <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform"/>
+                    </button>
+                 </div>
+              )}
+            </div>
         </div>
 
         {/* Hints & Instructions */}
-        <div className="flex items-center gap-4 mb-8 relative z-20">
-            <div className={`text-slate-400 text-sm flex items-center gap-2 transition-opacity duration-300 ${showSuccessAnim ? 'opacity-0' : 'opacity-70'}`}>
-                <Keyboard size={16} />
-                <span className="hidden sm:inline">Type translation...</span>
-            </div>
-            
+        <div className="flex flex-col items-center gap-4 mb-8 relative z-20">
             {!showSuccessAnim && !isComplete && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
+                     <div className={`text-slate-400 text-sm flex items-center gap-2 transition-opacity duration-300 ${userInput.length > 0 ? 'opacity-0' : 'opacity-70'}`}>
+                        <Keyboard size={16} />
+                        <span className="hidden sm:inline">Start typing...</span>
+                    </div>
+
+                    <div className="h-4 w-px bg-slate-200 mx-2 hidden sm:block"></div>
+
                     <button
                         onClick={() => {
                             presenter.gameManager.handleHint();
                             inputRef.current?.focus();
                         }}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition-colors text-sm font-medium border border-yellow-200 shadow-sm active:translate-y-0.5"
+                        className="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition-colors text-xs font-bold border border-yellow-200 shadow-sm active:translate-y-0.5 group"
                         title="Click or press Tab"
                     >
-                        <Lightbulb size={16} className={score >= 2 ? "fill-yellow-100" : ""} />
-                        <span>Hint</span>
-                        <span className="bg-white/60 px-1.5 py-0.5 rounded text-[10px] font-bold tracking-tight text-yellow-700/70 border border-yellow-200/50">-2</span>
+                        <Lightbulb size={14} className={`group-hover:fill-current ${score >= 2 ? "" : ""}`} />
+                        <span>HINT</span>
+                        <span className="bg-white/60 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold text-yellow-700/70 border border-yellow-200/50">-2</span>
                     </button>
-                    <span className="hidden sm:inline text-xs text-slate-400 ml-1">
-                        or press <kbd className="font-sans font-bold text-slate-500">Tab</kbd>
+                    <span className="hidden sm:inline text-[10px] font-bold uppercase tracking-wider text-slate-300">
+                        (Tab)
                     </span>
                 </div>
             )}
         </div>
 
-        {/* Bottom Success Overlay */}
+        {/* Bottom Success Overlay - Only show if NOT auto-advancing */}
         <SuccessOverlay 
-          isVisible={showSuccessAnim}
+          isVisible={showSuccessAnim && !isAutoAdvance}
           correctEnglish={currentSentence?.english || ''}
           onNext={() => presenter.gameManager.nextSentence()}
           onSpeak={() => presenter.audioManager.speak(currentSentence?.english)}
@@ -219,7 +226,7 @@ const GameScreen: React.FC = () => {
         />
 
         {error && (
-           <div className="absolute bottom-10 bg-red-100 text-red-600 px-4 py-2 rounded-lg text-sm">
+           <div className="absolute bottom-24 bg-red-100 text-red-600 px-4 py-2 rounded-lg text-sm border border-red-200 shadow-sm animate-shake">
              {error}
            </div>
         )}
