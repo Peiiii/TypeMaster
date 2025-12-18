@@ -1,8 +1,10 @@
+
 import React from 'react';
-import { Brain, Play, Pause, Volume2, VolumeX, BookOpen, LayoutGrid, Eye, EyeOff, Activity } from 'lucide-react';
+import { Brain, Play, Pause, Volume2, VolumeX, BookOpen, LayoutGrid, Eye, EyeOff, Activity, CheckCircle2 } from 'lucide-react';
 import DifficultySelector from './DifficultySelector';
 import TopicSelector from './TopicSelector';
 import { Difficulty, Topic, GameMode } from '../../types';
+import { useGameStore } from '../../stores/gameStore';
 
 interface GameHeaderProps {
   score: number;
@@ -41,28 +43,38 @@ const GameHeader: React.FC<GameHeaderProps> = ({
   onToggleSound,
   onToggleHint
 }) => {
+  const completedCount = useGameStore(state => state.completedCount);
+
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm transition-all duration-200">
       <div className="max-w-6xl mx-auto px-4 py-2 md:py-3">
         <div className="flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4">
           
-          {/* Top Row / Logo & Mode (Mobile Optimized) */}
+          {/* Top Row / Logo & Mode */}
           <div className="flex items-center justify-between w-full md:w-auto gap-4">
              <div className="flex items-center gap-2 md:gap-3">
               <div className={`bg-indigo-600 p-2 rounded-lg text-white shadow-indigo-200 shadow-lg transition-transform ${gameMode === 'story' ? 'rotate-[-5deg]' : ''}`}>
                 {gameMode === 'story' ? <BookOpen size={20} /> : <Brain size={20} />}
               </div>
-              <h1 className="text-lg md:text-xl font-bold text-slate-800 tracking-tight hidden sm:block">TypeMaster</h1>
+              <div className="hidden sm:block">
+                <h1 className="text-lg font-bold text-slate-800 leading-none">TypeMaster</h1>
+                {gameMode === 'practice' && (
+                  <div className="flex items-center gap-1 mt-0.5 text-[10px] text-emerald-500 font-bold uppercase tracking-wider">
+                    <CheckCircle2 size={10} />
+                    <span>{completedCount} Mastered</span>
+                  </div>
+                )}
+              </div>
             </div>
             
             {/* Stats Compact (Mobile) */}
              <div className="md:hidden flex items-center gap-3">
                  <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
                     <Activity size={12} className="text-orange-500" />
-                    <span className="text-xs font-bold text-slate-700">{wpm} WPM</span>
+                    <span className="text-xs font-bold text-slate-700">{wpm}</span>
                  </div>
                  <div className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">
-                    {score} pts
+                    {score}
                  </div>
              </div>
 
@@ -97,7 +109,7 @@ const GameHeader: React.FC<GameHeaderProps> = ({
             {gameMode === 'practice' && onTopicChange && (
               <>
                 <div className="h-4 w-px bg-slate-200 hidden sm:block"></div>
-                <div className="w-full sm:w-auto overflow-x-auto">
+                <div className="w-full sm:w-auto overflow-x-auto no-scrollbar">
                   <TopicSelector 
                     currentTopic={currentTopic}
                     onSelect={onTopicChange}
@@ -113,16 +125,14 @@ const GameHeader: React.FC<GameHeaderProps> = ({
              
              {/* Toggle Group */}
              <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-full border border-slate-200">
-               {/* Hint Toggle */}
                <button
                 onClick={onToggleHint}
                 className={`p-1.5 rounded-full transition-all ${showHint ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                title={showHint ? "Hide English (Translation Mode)" : "Show English (Typing Mode)"}
+                title={showHint ? "Hide English" : "Show English"}
                >
                 {showHint ? <Eye size={14} /> : <EyeOff size={14} />}
                </button>
 
-               {/* Sound Toggle */}
                <button
                 onClick={onToggleSound}
                 className={`p-1.5 rounded-full transition-all ${isSoundEnabled ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
@@ -131,7 +141,6 @@ const GameHeader: React.FC<GameHeaderProps> = ({
                 {isSoundEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
               </button>
 
-               {/* Auto Advance Toggle */}
                <button
                 onClick={onToggleAutoAdvance}
                 className={`p-1.5 rounded-full transition-all ${isAutoAdvance ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
@@ -156,7 +165,6 @@ const GameHeader: React.FC<GameHeaderProps> = ({
                 </div>
             </div>
             
-            {/* Mobile Progress Bar */}
              <div className="md:hidden flex-1 ml-2">
                <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                  <div 

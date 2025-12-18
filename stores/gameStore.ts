@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { Difficulty, GameState, Topic, GameMode } from '../types';
 
@@ -5,6 +6,7 @@ interface GameStore extends GameState {
   // New Stats
   wpm: number;
   showHint: boolean; // Toggle for "Copying Mode" vs "Translation Mode"
+  completedCount: number; // Total unique sentences completed across sessions
   
   // Actions
   setGameMode: (mode: GameMode) => void;
@@ -37,11 +39,12 @@ export const useGameStore = create<GameStore>((set) => ({
   score: 0,
   streak: 0,
   wpm: 0,
+  completedCount: 0,
   isLoading: true,
   isComplete: false,
   showSuccessAnim: false,
   isAutoAdvance: true,
-  isSoundEnabled: true, // Default to ON for better game feel
+  isSoundEnabled: false, // DEFAULT TO MUTED
   showHint: false, // Default to Translation mode (Harder)
   error: null,
 

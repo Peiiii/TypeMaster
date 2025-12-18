@@ -1,16 +1,46 @@
+
 import { useGameStore } from '../stores/gameStore';
 import { generateSentences, generateStory } from '../services/geminiService';
-import { Difficulty, GameMode, Topic } from '../types';
+import { Difficulty, GameMode, Topic, Sentence } from '../types';
 import { AudioManager } from './AudioManager';
+
+const STORAGE_KEYS = {
+  COMPLETED_PRACTICE: 'typemaster_completed_practice',
+  STORY_PROGRESS: 'typemaster_story_progress', // { difficulty: { storyIndex: number, sentenceIndex: number } }
+};
 
 export class GameManager {
   private audioManager = new AudioManager();
   private autoNextTimer: ReturnType<typeof setTimeout> | null = null;
   private sentenceStartTime: number | null = null;
 
-  // Helper to remove punctuation for logic comparison
   private stripPunctuation = (text: string) => {
     return text.replace(/[.,!?;:]/g, '');
+  };
+
+  private getCompletedSentences = (): Set<string> => {
+    const saved = localStorage.getItem(STORAGE_KEYS.COMPLETED_PRACTICE);
+    return new Set(saved ? JSON.parse(saved) : []);
+  };
+
+  private saveCompletedSentence = (english: string) => {
+    const completed = this.getCompletedSentences();
+    completed.add(english);
+    localStorage.setItem(STORAGE_KEYS.COMPLETED_PRACTICE, JSON.stringify(Array.from(completed)));
+    useGameStore.setState({ completedCount: completed.size });
+  };
+
+  private getStoryProgress = (difficulty: Difficulty) => {
+    const saved = localStorage.getItem(STORAGE_KEYS.STORY_PROGRESS);
+    const progress = saved ? JSON.parse(saved) : {};
+    return progress[difficulty] || { storyIndex: 0, sentenceIndex: 0 };
+  };
+
+  private saveStoryProgress = (difficulty: Difficulty, storyIndex: number, sentenceIndex: number) => {
+    const saved = localStorage.getItem(STORAGE_KEYS.STORY_PROGRESS);
+    const progress = saved ? JSON.parse(saved) : {};
+    progress[difficulty] = { storyIndex, sentenceIndex };
+    localStorage.setItem(STORAGE_KEYS.STORY_PROGRESS, JSON.stringify(progress));
   };
 
   loadSentences = async (difficulty: Difficulty, topic?: Topic) => {
@@ -18,23 +48,45 @@ export class GameManager {
     const targetTopic = topic || state.currentTopic;
     const isStoryMode = state.gameMode === 'story';
     
+    useGameStore.setState({ isLoading: true });
+
     try {
-      let sentences;
+      let sentences: Sentence[] = [];
+      let initialIndex = 0;
+
       if (isStoryMode) {
-        sentences = await generateStory(difficulty);
+        const progress = this.getStoryProgress(difficulty);
+        const storyPool = await generateStory(difficulty);
+        // StoryPool for one difficulty is an array of stories (Sentence[][])
+        // Since geminiService returns a single random story, we need to adapt it 
+        // OR make geminiService return all stories so we can pick. 
+        // For now, geminiService returns one, so we just check if it matches our progress or reset.
+        sentences = storyPool; 
+        initialIndex = progress.sentenceIndex < sentences.length ? progress.sentenceIndex : 0;
       } else {
+        const completed = this.getCompletedSentences();
         sentences = await generateSentences(difficulty, targetTopic);
+        
+        // Prioritize uncompleted sentences
+        const uncompleted = sentences.filter(s => !completed.has(s.english));
+        if (uncompleted.length >= 5) {
+          sentences = uncompleted.slice(0, 10);
+        } else {
+          // If we've seen almost everything, just give them the random set (shuffle ensures variety)
+          sentences = sentences.slice(0, 10);
+        }
       }
 
       useGameStore.setState({
         sentences,
-        currentSentenceIndex: 0,
+        currentSentenceIndex: initialIndex,
         isLoading: false,
         isComplete: false,
         error: null,
         userInput: '',
         showSuccessAnim: false,
-        wpm: 0
+        wpm: 0,
+        completedCount: this.getCompletedSentences().size
       });
       this.sentenceStartTime = null;
     } catch (err) {
@@ -72,24 +124,17 @@ export class GameManager {
   handleInput = (value: string) => {
     const state = useGameStore.getState();
     if (state.showSuccessAnim || state.isLoading) return;
-
-    // Prevent double spaces
     if (value.includes('  ')) return;
     
-    // Start Timer on first character
     if (!this.sentenceStartTime && value.length > 0) {
       this.sentenceStartTime = Date.now();
     }
 
-    // Play Type Sound if enabled and content changed (and length increased)
     if (state.isSoundEnabled && value.length > state.userInput.length) {
       this.audioManager.playTypeSound();
     }
 
-    // Strip punctuation from input
     const cleanValue = this.stripPunctuation(value);
-
-    // Auto-advance logic: Add space if word is complete and correct
     let nextValue = cleanValue;
     const isTypingForward = cleanValue.length > this.stripPunctuation(state.userInput).length;
 
@@ -101,20 +146,16 @@ export class GameManager {
 
         if (!cleanValue.endsWith(' ')) {
           const currentWordIndex = userWords.length - 1;
-          
           if (currentWordIndex < targetWords.length) {
             const currentUserWord = userWords[currentWordIndex];
             const currentTargetWord = targetWords[currentWordIndex];
             
-            // Check exact match (case insensitive)
             if (currentUserWord.toLowerCase() === currentTargetWord.toLowerCase()) {
               const isLastWord = currentWordIndex === targetWords.length - 1;
               if (!isLastWord) {
                 nextValue = cleanValue + ' ';
               }
             } else {
-               // Check for error to play sound
-               // If user typed 'a' and target is 'b', play error
                if (!currentTargetWord.toLowerCase().startsWith(currentUserWord.toLowerCase())) {
                    if (state.isSoundEnabled) this.audioManager.playErrorSound();
                }
@@ -133,11 +174,7 @@ export class GameManager {
     const timeSpentMs = Date.now() - this.sentenceStartTime;
     const timeSpentMin = timeSpentMs / 1000 / 60;
     if (timeSpentMin === 0) return 0;
-    
-    // Standard WPM = (All characters / 5) / Minutes
-    const wpm = Math.round((charCount / 5) / timeSpentMin);
-    // Cap at reasonable max to avoid glitches
-    return Math.min(wpm, 200);
+    return Math.min(Math.round((charCount / 5) / timeSpentMin), 200);
   };
 
   checkCompletion = (input: string) => {
@@ -149,12 +186,7 @@ export class GameManager {
     const normalizedTarget = this.stripPunctuation(currentSentence.english).trim().toLowerCase();
 
     if (normalizedInput === normalizedTarget) {
-      // Calculate WPM for this sentence
       const currentWpm = this.calculateWPM(currentSentence.english.length);
-      
-      // Update Average WPM
-      // If it's the first sentence, just use current. Otherwise average it roughly.
-      // A true average would need total chars / total time, but a rolling average is fine for a game.
       const newAverageWpm = state.wpm === 0 ? currentWpm : Math.round((state.wpm + currentWpm) / 2);
       
       useGameStore.setState({ wpm: newAverageWpm });
@@ -167,6 +199,14 @@ export class GameManager {
     const state = useGameStore.getState();
     if (state.showSuccessAnim) return;
 
+    // Persist completion
+    if (state.gameMode === 'practice') {
+      this.saveCompletedSentence(state.sentences[state.currentSentenceIndex].english);
+    } else {
+      // In story mode, we save the "next" index
+      this.saveStoryProgress(state.currentDifficulty, 0, state.currentSentenceIndex + 1);
+    }
+
     useGameStore.setState({
       showSuccessAnim: true,
       score: state.score + 10 + (state.streak * 2),
@@ -175,13 +215,11 @@ export class GameManager {
 
     if (state.isSoundEnabled) {
       this.audioManager.playSuccessSound();
-      // Speak immediately
       this.audioManager.speak(state.sentences[state.currentSentenceIndex].english);
     }
 
     if (state.isAutoAdvance) {
       if (this.autoNextTimer) clearTimeout(this.autoNextTimer);
-      // Fast transition: 200ms to allow visual confirmation (green text), then next.
       this.autoNextTimer = setTimeout(() => {
         this.nextSentence();
       }, 200);
@@ -191,7 +229,6 @@ export class GameManager {
   handleHint = () => {
     const state = useGameStore.getState();
     const currentSentence = state.sentences[state.currentSentenceIndex];
-
     if (!currentSentence || state.showSuccessAnim || state.isComplete) return;
 
     const target = this.stripPunctuation(currentSentence.english);
@@ -207,7 +244,6 @@ export class GameManager {
     }
 
     const nextContent = target.slice(0, matchLen + 1);
-    
     if (nextContent !== current) {
        useGameStore.setState({ 
          userInput: nextContent,
@@ -225,10 +261,14 @@ export class GameManager {
 
     const state = useGameStore.getState();
     const nextIndex = state.currentSentenceIndex + 1;
-    
-    this.sentenceStartTime = null; // Reset timer for next sentence
+    this.sentenceStartTime = null;
 
     if (nextIndex >= state.sentences.length) {
+      // If story mode reached end, reset progress for this difficulty
+      if (state.gameMode === 'story') {
+        this.saveStoryProgress(state.currentDifficulty, 0, 0);
+      }
+      
       useGameStore.setState({ 
         isComplete: true,
         showSuccessAnim: false,
@@ -249,6 +289,12 @@ export class GameManager {
       this.autoNextTimer = null;
     }
     const state = useGameStore.getState();
+    
+    // For story mode restart actually means start from begining
+    if (state.gameMode === 'story') {
+       this.saveStoryProgress(state.currentDifficulty, 0, 0);
+    }
+
     useGameStore.setState({
       score: 0,
       streak: 0,
