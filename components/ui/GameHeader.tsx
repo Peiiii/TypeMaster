@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Brain, Play, Pause, Volume2, VolumeX, BookOpen, LayoutGrid, Eye, EyeOff, Activity, CheckCircle2 } from 'lucide-react';
+import { Brain, Play, Pause, Volume2, VolumeX, BookOpen, LayoutGrid, Eye, EyeOff, Activity, CheckCircle2, Star } from 'lucide-react';
 import DifficultySelector from './DifficultySelector';
 import TopicSelector from './TopicSelector';
 import { Difficulty, Topic, GameMode } from '../../types';
@@ -46,132 +45,70 @@ const GameHeader: React.FC<GameHeaderProps> = ({
   const completedCount = useGameStore(state => state.completedCount);
 
   return (
-    <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm transition-all duration-200">
-      <div className="max-w-6xl mx-auto px-4 py-2 md:py-3">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4">
+    <header className="relative z-50 p-4">
+      <div className="max-w-7xl mx-auto bg-white border-[3px] border-black sticker-shadow rounded-2xl p-4 md:px-6 md:py-4">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           
-          {/* Top Row / Logo & Mode */}
-          <div className="flex items-center justify-between w-full md:w-auto gap-4">
-             <div className="flex items-center gap-2 md:gap-3">
-              <div className={`bg-indigo-600 p-2 rounded-lg text-white shadow-indigo-200 shadow-lg transition-transform ${gameMode === 'story' ? 'rotate-[-5deg]' : ''}`}>
-                {gameMode === 'story' ? <BookOpen size={20} /> : <Brain size={20} />}
-              </div>
-              <div className="hidden sm:block">
-                <h1 className="text-lg font-bold text-slate-800 leading-none">TypeMaster</h1>
-                {gameMode === 'practice' && (
-                  <div className="flex items-center gap-1 mt-0.5 text-[10px] text-emerald-500 font-bold uppercase tracking-wider">
-                    <CheckCircle2 size={10} />
-                    <span>{completedCount} Mastered</span>
-                  </div>
-                )}
+          {/* Logo Section */}
+          <div className="flex items-center gap-4 w-full md:w-auto">
+            <div className="bg-acid-pink p-2.5 rounded-xl border-[3px] border-black sticker-shadow -rotate-3 hover:rotate-0 transition-transform cursor-pointer">
+              <Star className="text-white fill-white animate-spin-slow" size={24} />
+            </div>
+            <div>
+              <h1 className="font-bubble text-2xl text-black tracking-tight leading-none">TYPEMASTER</h1>
+              <div className="flex items-center gap-2 mt-1">
+                 <span className="bg-acid-yellow text-black border-[2px] border-black px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-widest">
+                   {gameMode} MODE
+                 </span>
               </div>
             </div>
-            
-            {/* Stats Compact (Mobile) */}
-             <div className="md:hidden flex items-center gap-3">
-                 <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
-                    <Activity size={12} className="text-orange-500" />
-                    <span className="text-xs font-bold text-slate-700">{wpm}</span>
-                 </div>
-                 <div className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">
-                    {score}
-                 </div>
-             </div>
+          </div>
 
-            {/* Mode Switcher */}
-            <div className="flex bg-slate-100 p-1 rounded-lg ml-auto md:ml-0">
+          {/* Controls */}
+          <div className="flex flex-wrap items-center justify-center gap-3 w-full md:w-auto">
+            <div className="flex bg-slate-100 p-1 rounded-xl border-[2px] border-black">
                <button
                  onClick={() => onModeChange('practice')}
-                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs md:text-sm font-medium transition-all ${gameMode === 'practice' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all ${gameMode === 'practice' ? 'bg-acid-blue text-white border-[2px] border-black sticker-shadow scale-105' : 'text-slate-500'}`}
                >
-                 <LayoutGrid size={14} />
-                 <span>Topic</span>
+                 <LayoutGrid size={14} strokeWidth={3} />
+                 <span>PRACTICE</span>
                </button>
                <button
                  onClick={() => onModeChange('story')}
-                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs md:text-sm font-medium transition-all ${gameMode === 'story' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all ${gameMode === 'story' ? 'bg-acid-pink text-white border-[2px] border-black sticker-shadow scale-105' : 'text-slate-500'}`}
                >
-                 <BookOpen size={14} />
-                 <span>Story</span>
+                 <BookOpen size={14} strokeWidth={3} />
+                 <span>STORY</span>
                </button>
             </div>
-          </div>
-          
-          {/* Middle Controls */}
-          <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+
             <DifficultySelector 
               currentDifficulty={currentDifficulty} 
               onSelect={onDifficultyChange} 
               disabled={false}
             />
-            
-            {/* Only show topic selector in Practice Mode */}
-            {gameMode === 'practice' && onTopicChange && (
-              <>
-                <div className="h-4 w-px bg-slate-200 hidden sm:block"></div>
-                <div className="w-full sm:w-auto overflow-x-auto no-scrollbar">
-                  <TopicSelector 
-                    currentTopic={currentTopic}
-                    onSelect={onTopicChange}
-                    disabled={false}
-                  />
-                </div>
-              </>
-            )}
           </div>
 
-          {/* Right Stats & Toggles */}
-          <div className="flex items-center gap-2 md:gap-3 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 border-slate-100 pt-3 md:pt-0">
-             
-             {/* Toggle Group */}
-             <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-full border border-slate-200">
-               <button
-                onClick={onToggleHint}
-                className={`p-1.5 rounded-full transition-all ${showHint ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                title={showHint ? "Hide English" : "Show English"}
-               >
-                {showHint ? <Eye size={14} /> : <EyeOff size={14} />}
-               </button>
-
-               <button
-                onClick={onToggleSound}
-                className={`p-1.5 rounded-full transition-all ${isSoundEnabled ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                title="Toggle Sound"
-              >
-                {isSoundEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
-              </button>
-
-               <button
-                onClick={onToggleAutoAdvance}
-                className={`p-1.5 rounded-full transition-all ${isAutoAdvance ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                title="Toggle Auto-Next"
-              >
-                {isAutoAdvance ? <Play size={14} className="fill-current" /> : <Pause size={14} />}
-              </button>
+          {/* Stats Sticker Box */}
+          <div className="flex items-center gap-4 bg-acid-yellow border-[3px] border-black p-3 rounded-xl sticker-shadow rotate-1">
+             <div className="flex flex-col items-center border-r-[2px] border-black pr-4">
+                <span className="text-[10px] font-black uppercase text-black/50 tracking-tighter">SPEED</span>
+                <span className="font-bubble text-2xl text-black">{wpm}</span>
              </div>
-
-            {/* Desktop Stats */}
-            <div className="hidden md:flex items-center gap-4 text-sm font-medium border-l border-slate-200 pl-4">
-                <div className="flex flex-col items-end">
-                  <span className="text-slate-400 text-[10px] uppercase tracking-wider font-bold">Speed</span>
-                  <span className="text-slate-700 text-lg leading-none font-bold tabular-nums">{wpm} <span className="text-xs text-slate-400 font-normal">wpm</span></span>
-                </div>
-                <div className="flex flex-col items-end">
-                  <span className="text-slate-400 text-[10px] uppercase tracking-wider font-bold">Progress</span>
-                  <span className="text-slate-700 text-lg leading-none font-bold">
-                    {currentIndex + 1}
-                    <span className="text-slate-400 text-sm font-medium">/{totalSentences}</span>
-                  </span>
-                </div>
-            </div>
-            
-             <div className="md:hidden flex-1 ml-2">
-               <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                 <div 
-                    className="h-full bg-indigo-500 transition-all duration-300"
-                    style={{ width: `${((currentIndex + 1) / totalSentences) * 100}%` }}
-                 />
-               </div>
+             <div className="flex flex-col items-center">
+                <span className="text-[10px] font-black uppercase text-black/50 tracking-tighter">SCORE</span>
+                <span className="font-bubble text-2xl text-black">{score}</span>
+             </div>
+             
+             {/* Icon Toggles */}
+             <div className="flex flex-col gap-1 pl-2 ml-2 border-l-[2px] border-black">
+                <button onClick={onToggleSound} className="hover:text-acid-pink transition-colors">
+                  {isSoundEnabled ? <Volume2 size={16} strokeWidth={3} /> : <VolumeX size={16} strokeWidth={3} />}
+                </button>
+                <button onClick={onToggleHint} className="hover:text-acid-pink transition-colors">
+                  {showHint ? <Eye size={16} strokeWidth={3} /> : <EyeOff size={16} strokeWidth={3} />}
+                </button>
              </div>
           </div>
         </div>

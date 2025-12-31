@@ -9,28 +9,28 @@ interface TopicSelectorProps {
 }
 
 const TopicSelector: React.FC<TopicSelectorProps> = ({ currentTopic, onSelect, disabled }) => {
-  const topics: { id: Topic; label: string; icon: React.ReactNode }[] = [
-    { id: 'all', label: 'All', icon: <Sparkles size={14} /> },
-    { id: 'daily', label: 'Daily', icon: <Coffee size={14} /> },
-    { id: 'travel', label: 'Travel', icon: <Globe size={14} /> },
-    { id: 'business', label: 'Work', icon: <Briefcase size={14} /> },
-    { id: 'tech', label: 'Tech', icon: <Hash size={14} /> },
-    { id: 'social', label: 'Social', icon: <MessagesSquare size={14} /> },
+  const topics: { id: Topic; label: string; icon: React.ReactNode; color: string }[] = [
+    { id: 'all', label: 'ALL', icon: <Sparkles size={14} />, color: 'bg-acid-blue' },
+    { id: 'daily', label: 'DAILY', icon: <Coffee size={14} />, color: 'bg-acid-pink' },
+    { id: 'travel', label: 'TRAVEL', icon: <Globe size={14} />, color: 'bg-acid-yellow' },
+    { id: 'business', label: 'WORK', icon: <Briefcase size={14} />, color: 'bg-acid-orange' },
+    { id: 'tech', label: 'TECH', icon: <Hash size={14} />, color: 'bg-emerald-400' },
+    { id: 'social', label: 'SOCIAL', icon: <MessagesSquare size={14} />, color: 'bg-purple-400' },
   ];
 
   return (
-    <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1 md:pb-0">
+    <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
       {topics.map((item) => (
         <button
           key={item.id}
           onClick={() => onSelect(item.id)}
           disabled={disabled}
           className={`
-            flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 whitespace-nowrap
+            flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black border-[2px] border-black transition-all duration-200 whitespace-nowrap
             ${currentTopic === item.id 
-              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' 
-              : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50 hover:text-indigo-600'}
-            ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+              ? `${item.color} text-black sticker-shadow scale-105 rotate-1` 
+              : 'bg-white text-slate-500 opacity-80 hover:opacity-100'}
+            ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}
           `}
         >
           {item.icon}
